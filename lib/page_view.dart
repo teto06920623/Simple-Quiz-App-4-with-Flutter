@@ -10,14 +10,13 @@ class PageViewScreen extends StatefulWidget {
 }
 
 class _PageViewScreenState extends State<PageViewScreen> {
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView.builder(
         itemCount: listAnswers.length,
         itemBuilder: (context, index) {
-          return Quiz_screan(index: index);
+          return QuizScreen(initialIndex: index);
         },
       ),
     );

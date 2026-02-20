@@ -2,114 +2,126 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'model.dart';
 
-// ignore: must_be_immutable
-class Quiz_screan extends StatefulWidget {
-  Quiz_screan({super.key, required this.index});
-  int index;
+class QuizScreen extends StatefulWidget {
+  final int initialIndex;
+  const QuizScreen({super.key, required this.initialIndex});
 
   @override
-  State<Quiz_screan> createState() => _Quiz_screanState();
+  State<QuizScreen> createState() => _QuizScreenState();
 }
 
-class _Quiz_screanState extends State<Quiz_screan> {
-  int? SelectIndex;
+class _QuizScreenState extends State<QuizScreen> {
+  late int currentIndex;
+  int? selectedIndex;
   int score = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentQuestion = listAnswers[currentIndex];
+
     return Scaffold(
       backgroundColor: Colors.black,
-
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Spacer(),
-          //Quiz App
-          Text("Quiz App", style: TextStyle(fontSize: 25, color: Colors.white)),
-
-          Gap(50),
-          //Question 2/4
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(
-                "Question ${widget.index + 1}/${listAnswers.length}",
-                style: TextStyle(fontSize: 25, color: Colors.white),
-              ),
-            ],
+          const Spacer(),
+          const Text(
+            "Quiz App",
+            style: TextStyle(fontSize: 25, color: Colors.white),
           ),
+          const Gap(50),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  "Question ${currentIndex + 1}/${listAnswers.length}",
+                  style: const TextStyle(fontSize: 25, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          const Gap(50),
 
-          Gap(50),
-          //Question????????
+          // Question Card
           Stack(
             clipBehavior: Clip.none,
             children: [
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 19, vertical: 20),
-                margin: EdgeInsets.all(10),
-                height: 80,
-                width: MediaQuery.of(context).size.width,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 19,
+                  vertical: 20,
+                ),
+                margin: const EdgeInsets.all(10),
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
-
                 child: Text(
+                  currentQuestion.question,
                   textAlign: TextAlign.center,
-                  listAnswers[widget.index].question,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-
-              Positioned(
+              const Positioned(
                 top: -10,
-                left: MediaQuery.of(context).size.width / 2 - 20,
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 20,
-                  child: Icon(Icons.check, color: Colors.green, size: 25),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 20,
+                    child: Icon(
+                      Icons.help_outline,
+                      color: Colors.orange,
+                      size: 25,
+                    ),
+                  ),
                 ),
-              ),
-              Positioned(
-                top: 30,
-                left: -14,
-                child: CircleAvatar(backgroundColor: Colors.black, radius: 20),
-              ),
-              Positioned(
-                top: 30,
-                right: -14,
-                child: CircleAvatar(backgroundColor: Colors.black, radius: 20),
               ),
             ],
           ),
 
-          Gap(10),
-          //Ansars
+          const Gap(10),
+
+          // Answers List
           ListView.builder(
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: listAnswers[widget.index].answer.length,
+            itemCount: currentQuestion.answer.length,
             itemBuilder: (context, index) {
               return InkWell(
-                onTap: () {
-                  setState(() {
-                    SelectIndex = index;
-                  });
-                },
+                onTap: () => setState(() => selectedIndex = index),
                 child: Container(
-                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 50),
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 50,
+                  ),
+                  padding: const EdgeInsets.all(10),
                   alignment: Alignment.center,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: SelectIndex == index ? Colors.green : Colors.white,
+                    color: selectedIndex == index ? Colors.green : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    listAnswers[widget.index].answer.keys.toList()[index],
+                    currentQuestion.answer.keys.toList()[index],
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: SelectIndex == index ? Colors.white : Colors.black,
+                      color: selectedIndex == index
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   ),
                 ),
@@ -117,57 +129,70 @@ class _Quiz_screanState extends State<Quiz_screan> {
             },
           ),
 
-          Spacer(),
-          //NEXST
+          const Spacer(),
+
+          // Next / Submit Button
           GestureDetector(
             onTap: () {
+              if (selectedIndex == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Please select an answer first!"),
+                  ),
+                );
+                return;
+              }
+
               setState(() {
-                listAnswers[widget.index].answer.values
-                            .toList()[SelectIndex!] ==
-                        true
-                    ? score++
-                    : score;
-                if (widget.index < listAnswers.length - 1) {
-                  SelectIndex == null;
-                  widget.index++;
+                bool isCorrect = currentQuestion.answer.values
+                    .toList()[selectedIndex!];
+                if (isCorrect) score++;
+
+                if (currentIndex < listAnswers.length - 1) {
+                  currentIndex++;
+                  selectedIndex = null;
                 } else {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AboutDialog(
-                        children: [
-                          Text("your score is $score"),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text("OK"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                  _showResultDialog();
                 }
               });
             },
             child: Container(
               height: 60,
-              width: MediaQuery.of(context).size.width,
-              margin: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 40),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
                 child: Text(
-                  widget.index < listAnswers.length - 1 ? "N E X T" : "Submit",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  currentIndex < listAnswers.length - 1 ? "N E X T" : "Submit",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
           ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
 
-          Spacer(),
+  void _showResultDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        title: const Text("Quiz Completed"),
+        content: Text("Your score is $score / ${listAnswers.length}"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
         ],
       ),
     );
